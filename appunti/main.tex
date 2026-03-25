@@ -1,0 +1,243 @@
+\documentclass[12pt,a4paper,oneside]{report} % 'report' è meglio per tesi lunghe (usa i capitoli)
+
+% --- Pacchetti Standard ---
+\usepackage[utf8]{inputenc}
+\usepackage[italian]{babel}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{titling}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage{fancyvrb}
+\usepackage{caption}
+\usepackage{hyphenat}
+\usepackage{microtype}
+\usepackage{txfonts} % Font originale che usavi
+
+% --- Configurazione Margini ---
+\geometry{
+  a4paper,
+  left=3.5cm,
+  right=2cm,
+  top=2.5cm,
+  bottom=2.5cm,
+}
+
+% --- Configurazione Listing (Codice) ---
+\renewcommand{\lstlistingname}{Code}
+\renewcommand{\lstlistlistingname}{List of Code}
+\lstdefinestyle{chstyle}{%
+    backgroundcolor=\color{gray!12},
+    basicstyle=\ttfamily\small,
+    commentstyle=\color{green!60!black},
+    keywordstyle=\color{magenta},
+    stringstyle=\color{blue!50!red},
+    showstringspaces=false,
+    numbers=left,
+    numberstyle=\footnotesize\color{gray},
+    numbersep=10pt,
+    frame=L,
+    framerule=1pt,
+    rulecolor=\color{red},
+    breaklines=true,
+}
+\lstset{style=chstyle}
+
+% --- Comandi Personalizzati ---
+\newcommand{\commento}[1]{\textcolor{red}{\MakeUppercase{#1}}}
+\newcommand{\virgolette}[1]{``#1''}
+
+% ============================================================
+% INIZIO DOCUMENTO
+% ============================================================
+\begin{document}
+\onehalfspacing
+
+% --- FRONTESPIZIO ---
+\begin{titlepage}
+    \begin{center}
+        {\LARGE \textbf{Università della Calabria}} \\
+        \vspace{0.2cm}
+        {\large Dipartimento di Matematica e Informatica} \\
+        \hrulefill \\
+        \vspace{0.5cm}
+        \includegraphics[width=0.25\textwidth]{image/logo.png} \\ % Assicurati che il path sia corretto
+        \vspace{1cm}
+        {\textit{\large\textbf{Corso di Laurea Magistrale in Informatica}}} \\
+        \vspace{2cm}
+        {\huge \textbf{Tesi di Laurea Magistrale}} \\
+        \vspace{1.5cm}
+        {\Large \textbf{TITOLO DELLA TUA TESI MAGISTRALE}} \\ % <--- Inserisci Titolo
+    \end{center}
+
+    \vspace{3cm}
+
+    \noindent
+    \begin{minipage}[t]{0.5\textwidth}
+        {\large \textbf{Relatore:}} \\
+        {\large Prof. Nome Cognome} \\ % <--- Relatore
+        \vspace{0.5cm} \\
+        {\large \textbf{Correlatore:}} \\
+        {\large Dott. Nome Cognome}    % <--- Eventuale Correlatore
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.4\textwidth}
+        \raggedleft
+        {\large \textbf{Candidato:}} \\
+        {\large Domenico Visciglia} \\
+        {\large Matricola: 230655}
+    \end{minipage}
+
+    \vfill
+    \begin{center}
+        \hrulefill \\
+        {\large Anno Accademico 2025/2026} % <--- Aggiorna anno
+    \end{center}
+\end{titlepage}
+
+% --- PAGINE INIZIALI (Indici) ---
+\newpage
+\thispagestyle{empty}
+\null \newpage % Pagina bianca dopo il frontespizio
+
+\pagenumbering{roman} % Numerazione romana per indici e abstract
+
+\begin{abstract}
+Inserisci qui il riassunto della tua tesi magistrale...
+\end{abstract}
+
+\tableofcontents % Indice generale
+\listoffigures   % Elenco figure
+\lstlistoflistings % Elenco codici
+
+\newpage
+\pagenumbering{arabic} % Numerazione araba per il corpo del testo
+\setcounter{page}{1}
+
+% --- CAPITOLI ---
+% Ti consiglio di creare file .tex separati per ogni capitolo e usarli con \include{capitoli/cap1}
+
+\chapter{Introduzione}
+\section{Contesto scientifico e motivazione}
+Le interazioni proteina-proteina (PPI) sono uno dei livelli fondamentali con cui la cellula realizza funzioni complesse, dalla regolazione dell'espressione genica al traffico intracellulare, fino alla risposta a stimoli ambientali. Modellare in modo affidabile queste interazioni e' quindi un obiettivo centrale della bioinformatica moderna, ma resta difficile per due motivi principali: la scarsita' di evidenze sperimentali complete e l'eterogeneita' biologica tra organismi. In questo scenario, i metodi di deep learning sequence-based rappresentano una soluzione promettente, perche' permettono di inferire compatibilita' di legame direttamente dalla sequenza amminoacidica, senza richiedere come input strutture 3D sperimentali.
+
+Questa tesi nasce dall'esigenza di trasferire tali approcci in un dominio biologico specifico e realistico: il lievito \textit{Saccharomyces cerevisiae}. Il punto di partenza e' D-SCRIPT, modello pre-addestrato in ambito umano e progettato con una logica \textit{structure-aware}, cioe' capace di stimare una mappa di contatto residuo-residuo oltre al punteggio finale di interazione. Tuttavia, passare da un modello pre-addestrato a un contesto specie-specifico non e' un'operazione diretta: richiede una filiera dati coerente, controlli di qualita' rigorosi e scelte metodologiche che limitino leakage e ridondanza.
+
+Per questo, il contributo principale del lavoro non e' solo l'addestramento del modello, ma la costruzione di una pipeline riproducibile che integra sorgenti eterogenee e le rende compatibili con il fine-tuning. Nella codebase, questa filiera e' implementata in modo modulare: mappatura delle annotazioni GO in macro-zone biologiche con \texttt{uniprot\_lievito/create\_protein\_zones.py}, unificazione di metadati e sequenze con filtro di lunghezza in \texttt{uniprot\_lievito/create\_unified\_dataset.py}, pulizia delle interazioni fisiche STRING ad alta confidenza in \texttt{string\_lievito/cleaning\_string.py}, riconciliazione degli identificativi e generazione dei negativi 10:1 in \texttt{string\_lievito/final\_string\_pos\_neg.py}.
+
+Un aspetto metodologico decisivo riguarda il controllo della ridondanza di sequenza, necessario per evitare che il modello apprenda per memoria su proteine quasi identiche. A questo scopo la pipeline utilizza CD-HIT (soglia di identita' al 40\%) e filtra le interazioni a livello di coppie cluster-cluster prima dello split supervisionato, come implementato in \texttt{fasta\_lievito/cd-hit.py} e \texttt{create\_dataset\_kaggle.py}. Il risultato e' la generazione dei file finali \texttt{dscript\_train.csv} e \texttt{dscript\_test.csv}, pensati per una valutazione piu' realistica della capacita' di generalizzazione.
+
+Sul piano modellistico, il repository include inoltre uno scheletro operativo di fine-tuning in \texttt{dscript\_finetuning\_kaggle.py}, in cui l'aggiornamento dei pesi viene concentrato sui moduli decisionali, mantenendo congelate le componenti di embedding/proiezione. In questa fase viene introdotta anche una penalizzazione semantica legata alla localizzazione subcellulare, trattata come prior morbido e non come vincolo rigido, per riflettere la reale comunicazione tra compartimenti cellulari.
+
+In sintesi, il contesto di questa tesi e' quello di una traslazione controllata: da un modello PPI pre-addestrato in dominio umano a una pipeline orientata al lievito, con attenzione congiunta a coerenza biologica, qualita' dei dati e sostenibilita' computazionale. La motivazione scientifica e metodologica e' dimostrare che, in problemi biologici complessi, la performance del modello dipende in modo sostanziale dalla qualita' della costruzione del dataset e dalle ipotesi biologiche incorporate nel processo di training.
+\section{Obiettivi della tesi}
+L'obiettivo generale di questa tesi e' sviluppare e validare una pipeline completa per l'adattamento di D-SCRIPT al dominio del lievito \textit{Saccharomyces cerevisiae}, mantenendo coerenza biologica, robustezza metodologica e riproducibilita' operativa.
+
+In particolare, il lavoro persegue i seguenti obiettivi specifici:
+\begin{itemize}
+    \item costruire un dataset PPI specie-specifico a partire da sorgenti eterogenee (UniProt, STRING, Gene Ontology), risolvendo mismatch di identificativi, rumore sperimentale e differenze semantiche nelle annotazioni;
+    \item normalizzare la localizzazione subcellulare tramite una mappatura GO in sette macro-zone biologiche, in modo da ottenere una rappresentazione interpretabile e utilizzabile nel training;
+    \item controllare il rischio di data leakage e memorizzazione spuria mediante riduzione della ridondanza di sequenza con CD-HIT e filtraggio delle coppie a livello di cluster;
+    \item produrre split supervisionati train/test bilanciati in modo realistico rispetto alla natura del problema (rapporto negativi:positivi 10:1), pronti per il fine-tuning;
+    \item impostare uno schema di fine-tuning di D-SCRIPT in cui la loss originale sia integrata con un prior semantico morbido basato sulla compatibilita' compartimentale, evitando vincoli biologicamente troppo rigidi.
+\end{itemize}
+
+In termini metodologici, la tesi si propone inoltre di evidenziare che la qualita' della preparazione dati non e' un passaggio accessorio, ma una componente strutturale delle prestazioni finali del modello, soprattutto in scenari cross-dominio.
+\section{Contributi principali}
+I contributi principali del lavoro possono essere sintetizzati nei punti seguenti:
+
+\begin{itemize}
+    \item \textbf{Pipeline ETL riproducibile per il lievito.} E' stata implementata una filiera end-to-end che parte da UniProt/STRING/GO e produce dataset supervisionati finali per D-SCRIPT (\texttt{dscript\_train.csv}, \texttt{dscript\_test.csv}).
+    \item \textbf{Armonizzazione semantica delle annotazioni cellulari.} Le annotazioni GO testuali sono state ricondotte a 7 macro-zone tramite risalita ontologica con \texttt{goatools}, consentendo una codifica biologicamente piu' robusta dei compartimenti.
+    \item \textbf{Riconciliazione degli identificativi tra database.} E' stata realizzata la traduzione STRING--UniProt tramite mappa gene name $\rightarrow$ accession, con filtraggio dei casi non mappabili e deduplicazione canonica delle coppie.
+    \item \textbf{Controllo della ridondanza e del leakage.} L'uso di CD-HIT a soglia 40\% e il filtro su coppie cluster-cluster riducono la dipendenza da similarita' banali di sequenza, migliorando la validita' della valutazione.
+    \item \textbf{Schema di fine-tuning con prior biologico.} E' stato predisposto un framework di addestramento che congela i moduli meno specifici e introduce una penalizzazione semantica per interazioni ad alta probabilita' in compartimenti incompatibili.
+    \item \textbf{Orientamento alla scalabilita' su Kaggle.} La codebase documenta strategie pratiche per gestire vincoli di memoria/storage durante la generazione e l'uso degli embedding proteici.
+\end{itemize}
+
+Nel complesso, il contributo della tesi non e' solo applicativo, ma anche metodologico: propone un percorso strutturato per trasferire modelli PPI pre-addestrati a nuovi organismi con criteri espliciti di qualita' dei dati e plausibilita' biologica.
+\section{Struttura del documento}
+Il documento e' organizzato come segue. Il Capitolo 2 presenta lo stato dell'arte sulla predizione PPI e i fondamenti di D-SCRIPT. Il Capitolo 3 descrive le sorgenti dati utilizzate e il problema della loro armonizzazione semantica e identificativa. Il Capitolo 4 dettaglia la pipeline ETL implementata nella codebase, con riferimento puntuale agli script e ai relativi output intermedi/finali.
+
+Il Capitolo 5 illustra lo schema di fine-tuning su \textit{S. cerevisiae}, inclusa l'integrazione del termine semantico nella loss. Il Capitolo 6 affronta le ottimizzazioni necessarie per la gestione degli embedding e la scalabilita' operativa in ambiente Kaggle. Il Capitolo 7 riporta risultati e discussione critica, con attenzione a metriche, limiti e validita' sperimentale. Infine, il Capitolo 8 sintetizza le conclusioni e propone le estensioni future del lavoro. Le appendici raccolgono dettagli operativi, tabelle supplementari e note di riproducibilita'.
+
+\chapter{Stato dell'arte e fondamenti teorici}
+\section{Predizione di interazioni proteina-proteina}
+\section{Approcci sequence-based e limiti principali}
+\section{Modello D-SCRIPT: principi, architettura e interpretabilita'}
+\subsection{Embedding residuo-residuo}
+\subsection{Modulo di contatto e contact map}
+\subsection{Pooling e scoring finale}
+\subsection{Funzione di perdita: BCE e Magnitude Loss}
+\section{Generalizzazione cross-specie: confronto con la letteratura}
+
+\chapter{Sorgenti dati e armonizzazione biologica}
+\section{Dataset utilizzati: UniProt, STRING e Gene Ontology}
+\section{Problemi di eterogeneita' degli identificativi}
+\section{Annotazioni GO e mappatura in macro-zone cellulari}
+\subsection{Scelta delle 7 macro-zone biologiche}
+\subsection{Gestione dei casi multi-zona}
+
+\chapter{Pipeline ETL per il lievito}
+\section{Panoramica end-to-end della pipeline}
+\section{Costruzione delle zone proteiche con goatools}
+\subsection{Script: \texttt{uniprot\_lievito/create\_protein\_zones.py}}
+\section{Dataset unificato proteine-sequenze-zone e filtro di lunghezza}
+\subsection{Script: \texttt{uniprot\_lievito/create\_unified\_dataset.py}}
+\section{Pulizia delle interazioni STRING ad alta confidenza}
+\subsection{Script: \texttt{string\_lievito/cleaning\_string.py}}
+\section{Risoluzione mismatch ID STRING--UniProt e generazione negativi}
+\subsection{Script: \texttt{string\_lievito/final\_string\_pos\_neg.py}}
+\section{Riduzione ridondanza di sequenza con CD-HIT}
+\subsection{Scelta della soglia al 40\%}
+\subsection{Script: \texttt{fasta\_lievito/cd-hit.py}}
+\section{Creazione dei file finali di training e test}
+\subsection{Script: \texttt{create\_dataset\_kaggle.py}}
+\section{Controlli anti-leakage e riproducibilita'}
+
+\chapter{Fine-tuning di D-SCRIPT su \textit{Saccharomyces cerevisiae}}
+\section{Setup sperimentale e caricamento del modello pre-addestrato}
+\section{Strategia di congelamento dei moduli}
+\section{Loss complessiva e integrazione semantica}
+\subsection{Definizione della matrice di affinita' biologica $7 \times 7$}
+\subsection{Maschera di penalizzazione e condizioni di attivazione}
+\subsection{Ruolo degli iperparametri $\lambda$ e $\gamma$}
+\section{Dettagli implementativi del training loop}
+\subsection{Script: \texttt{dscript\_finetuning\_kaggle.py}}
+
+\chapter{Ottimizzazione degli embedding e scalabilita' su Kaggle}
+\section{Collo di bottiglia computazionale e vincoli di storage}
+\section{Tentativi di compressione e limiti operativi}
+\section{Strategia a chunk e gestione multi-file HDF5}
+\section{Data loading con unificazione virtuale}
+\section{Proiezione anticipata a 100 dimensioni e wrapper del modello}
+\section{Impatto su tempi, memoria e stabilita'}
+
+\chapter{Risultati sperimentali e discussione}
+\section{Statistiche finali del dataset}
+\section{Metriche di valutazione e protocollo sperimentale}
+\section{Analisi comparativa delle varianti di loss}
+\section{Analisi qualitativa di casi studio biologici}
+\section{Limiti metodologici e minacce alla validita'}
+
+\chapter{Conclusioni e sviluppi futuri}
+\section{Sintesi dei risultati}
+\section{Contributi della pipeline proposta}
+\section{Possibili estensioni future}
+
+\appendix
+\chapter{Appendice A: Script e configurazioni operative}
+\chapter{Appendice B: Tabelle supplementari del dataset}
+\chapter{Appendice C: Note di riproducibilita'}
+
+% --- BIBLIOGRAFIA ---
+\begin{thebibliography}{99}
+\addcontentsline{toc}{chapter}{Bibliografia}
+\bibitem{esempio} Autore, \textit{Titolo Libro}, Editore, Anno.
+\end{thebibliography}
+
+\end{document}
