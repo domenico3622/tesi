@@ -1,54 +1,54 @@
-# Tesi: Predizione di Interazioni Proteina-Proteina con ESM-2 e Modello Custom
+# Thesis: Protein-Protein Interaction Prediction with ESM-2 and a Custom Model
 
-## Panoramica
-Questo repository contiene il lavoro di tesi sulla predizione delle interazioni proteina-proteina (PPI), con confronto tra:
+## Overview
+This repository contains the thesis work on protein-protein interaction (PPI) prediction, with a comparison between:
 
-- baseline D-SCRIPT pre-addestrata
-- modello custom basato su embedding ESM-2 + modulo di cross-attention bidirezionale + classificazione logistica
+- pre-trained D-SCRIPT baseline
+- custom model based on ESM-2 embeddings + bidirectional cross-attention module + logistic classification
 
-Il flusso sperimentale principale e' documentato nel notebook:
+The main experimental flow is documented in the notebook:
 
 - [appunti/esm2-v2 (4).ipynb](appunti/esm2-v2%20(4).ipynb)
 
-L'idea centrale e' migliorare la capacita' di generalizzazione cross-specie sfruttando embedding proteici contestuali (ESM-2) e una contact map predetta con attention multi-head.
+The core idea is to improve cross-species generalization by leveraging contextual protein embeddings (ESM-2) and a predicted contact map with multi-head attention.
 
-## Obiettivo della tesi
-Obiettivo del progetto e' costruire e valutare una pipeline completa che:
+## Thesis objective
+The objective of the project is to build and evaluate a complete pipeline that:
 
-1. prepara dataset PPI bilanciati/sbilanciati in modo controllato
-2. genera embedding proteici da sequenza con ESM-2
-3. addestra un modello custom per inferire la probabilita' di interazione
-4. confronta le prestazioni con D-SCRIPT su piu' organismi
+1. prepares balanced/unbalanced PPI datasets in a controlled way
+2. generates protein embeddings from sequence with ESM-2
+3. trains a custom model to infer interaction probability
+4. compares performance with D-SCRIPT across multiple organisms
 
-## Architettura del modello
-La figura seguente riassume l'architettura implementata nel notebook.
+## Model architecture
+The following figure summarizes the architecture implemented in the notebook.
 
-![Diagramma generale architettura](appunti/diagramma_generale.png)
+![General architecture diagram](appunti/diagramma_generale.png)
 
-### Lettura del diagramma
-- Ogni proteina viene codificata da ESM-2 in una sequenza di vettori (embedding per residuo).
-- I due tensori Z1 e Z2 passano in blocchi Conv1D dilatati paralleli (dilatazioni 1, 2, 4) per catturare pattern locali su scale diverse.
-- Le feature passano in due MLP (q_net e k_net) e vengono splittate in multi-head.
-- Viene applicata una cross-attention bidirezionale tra le due proteine.
-- Le mappe vengono fuse e attivate per ottenere una Predicted Contact Map.
-- Un modulo di pooling adattivo + attivazione logistica produce la probabilita' finale di interazione.
+### How to read the diagram
+- Each protein is encoded by ESM-2 into a sequence of vectors (embedding per residue).
+- The two tensors Z1 and Z2 pass through parallel dilated Conv1D blocks (dilations 1, 2, 4) to capture local patterns at different scales.
+- Features pass through two MLPs (q_net and k_net) and are split into multi-heads.
+- Bidirectional cross-attention is applied between the two proteins.
+- The maps are fused and activated to obtain a Predicted Contact Map.
+- An adaptive pooling + logistic activation module produces the final interaction probability.
 
-Nel notebook sono presenti due varianti principali:
+The notebook includes two main variants:
 
-- CustomAttentionPPI (matrice di affinita' spaziale statica)
-- CustomAttentionPPI_Auto (matrice di affinita' 7x7 apprendibile)
+- CustomAttentionPPI (static spatial affinity matrix)
+- CustomAttentionPPI_Auto (learnable 7x7 affinity matrix)
 
-## Pipeline ETL (Extract, Transform, Load)
-La fase ETL e' distribuita in piu' script e prepara i dati per training e valutazione.
+## ETL Pipeline (Extract, Transform, Load)
+The ETL phase is distributed across multiple scripts and prepares data for training and evaluation.
 
 ### 1) Extract
-Sorgenti principali:
+Main sources:
 
-- STRING physical links (lievito, pombe, candida)
-- UniProt TSV e FASTA
-- dataset TSV/CSV organism-specific (es. drosophila)
+- STRING physical links (yeast, pombe, candida)
+- UniProt TSV and FASTA
+- organism-specific TSV/CSV datasets (e.g. drosophila)
 
-File/sorgenti coinvolte nella codebase:
+Files/sources involved in the codebase:
 
 - [string_lievito/4932.protein.physical.links.detailed.v12.0.txt](string_lievito/4932.protein.physical.links.detailed.v12.0.txt)
 - [fasta_pombe/284812.protein.physical.links.detailed.v12.0.txt](fasta_pombe/284812.protein.physical.links.detailed.v12.0.txt)
@@ -57,17 +57,17 @@ File/sorgenti coinvolte nella codebase:
 - [fasta_lievito/UP000002311_559292.fasta](fasta_lievito/UP000002311_559292.fasta)
 
 ### 2) Transform
-Trasformazioni principali:
+Main transformations:
 
-- pulizia ID STRING (rimozione prefisso tassonomico)
-- selezione positivi ad alta confidenza (experimental >= 700)
-- costruzione negativi con campionamento casuale controllato (tipicamente rapporto 10:1)
-- filtraggio sequenze per lunghezza
-- deduplicazione/riduzione ridondanza tramite CD-HIT e cluster map
-- mapping gene/protein ID verso accession UniProt
-- arricchimento con localizzazione subcellulare (7 macro-zone GO)
+- STRING ID cleaning (taxonomic prefix removal)
+- high-confidence positive selection (experimental >= 700)
+- negative set construction with controlled random sampling (typically 10:1 ratio)
+- sequence length filtering
+- deduplication/redundancy reduction via CD-HIT and cluster map
+- gene/protein ID mapping to UniProt accessions
+- enrichment with subcellular localization (7 GO macro-zones)
 
-Script principali:
+Main scripts:
 
 - [string_lievito/cleaning_string.py](string_lievito/cleaning_string.py)
 - [string_lievito/final_string_pos_neg.py](string_lievito/final_string_pos_neg.py)
@@ -79,60 +79,60 @@ Script principali:
 - [candida_albicans/create_candida_test_dataset.py](candida_albicans/create_candida_test_dataset.py)
 - [fasta_drosophila/filter_dataset.py](fasta_drosophila/filter_dataset.py)
 
-Output ETL tipici:
+Typical ETL outputs:
 
-- dataset train/test per il fine-tuning: [dscript_train.csv](dscript_train.csv), [dscript_test.csv](dscript_test.csv)
-- dataset organism-specific di test
-- FASTA filtrati
-- file unificato con zone GO e sequenze: [uniprot_lievito/unified_protein_filter_ds.csv](uniprot_lievito/unified_protein_filter_ds.csv)
+- train/test datasets for fine-tuning: [dscript_train.csv](dscript_train.csv), [dscript_test.csv](dscript_test.csv)
+- organism-specific test datasets
+- filtered FASTA files
+- unified file with GO zones and sequences: [uniprot_lievito/unified_protein_filter_ds.csv](uniprot_lievito/unified_protein_filter_ds.csv)
 
 ### 3) Load
-Il caricamento avviene nel notebook e negli script di training:
+Loading is performed in the notebook and in training scripts:
 
-- conversione sequenze in embedding ESM-2 e salvataggio H5
-- caricamento embeddings in RAM con dataset PyTorch custom
-- costruzione DataLoader con padding dinamico e maschere di lunghezza
+- sequence conversion to ESM-2 embeddings and H5 saving
+- embedding loading into RAM with a custom PyTorch dataset
+- DataLoader construction with dynamic padding and length masks
 
-Nel notebook il dataset class e':
+In the notebook, the dataset class is:
 
 - YeastPPIDataset
 
-La funzione di collate crea:
+The collate function creates:
 
-- tensori padded per entrambe le proteine
-- maschere booleane per ignorare il padding
-- tensori di localizzazione subcellulare
+- padded tensors for both proteins
+- boolean masks to ignore padding
+- subcellular localization tensors
 
-## Flusso sperimentale nel notebook
-Nel notebook [appunti/esm2-v2 (4).ipynb](appunti/esm2-v2%20(4).ipynb) il workflow e' organizzato in blocchi:
+## Experimental flow in the notebook
+In the notebook [appunti/esm2-v2 (4).ipynb](appunti/esm2-v2%20(4).ipynb), the workflow is organized into blocks:
 
-1. installazione dipendenze
-2. generazione embedding ESM-2 in H5
-3. definizione dataset e dataloader
-4. definizione architetture CustomAttentionPPI e CustomAttentionPPI_Auto
-5. training multi-configurazione (diversi pesi della loss)
-6. valutazione su baseline D-SCRIPT e modelli custom
-7. confronto su organismi multipli (S. cerevisiae, Drosophila, S. pombe, Candida albicans)
+1. dependency installation
+2. ESM-2 embedding generation in H5
+3. dataset and dataloader definition
+4. architecture definition for CustomAttentionPPI and CustomAttentionPPI_Auto
+5. multi-configuration training (different loss weights)
+6. evaluation on D-SCRIPT baseline and custom models
+7. comparison across multiple organisms (S. cerevisiae, Drosophila, S. pombe, Candida albicans)
 
-## Loss e informazione biologica
-La loss combina contributi multipli:
+## Loss and biological information
+The loss combines multiple contributions:
 
-- BCE per classificazione interazione/non-interazione
-- termine sulla magnitudine/struttura della contact map
-- penalizzazione spaziale basata su compatibilita' di localizzazione subcellulare
+- BCE for interaction/non-interaction classification
+- term on contact map magnitude/structure
+- spatial penalty based on subcellular localization compatibility
 
-Nella variante Auto, la matrice di affinita' tra compartimenti cellulari e' apprendibile.
-Nella variante Spatial, la matrice e' statica (hard-coded).
+In the Auto variant, the affinity matrix between cellular compartments is learnable.
+In the Spatial variant, the matrix is static (hard-coded).
 
-## Dataset e organismi
-Il repository contiene dati e script per:
+## Datasets and organisms
+The repository contains data and scripts for:
 
-- Saccharomyces cerevisiae (pipeline principale)
+- Saccharomyces cerevisiae (main pipeline)
 - Drosophila
 - Schizosaccharomyces pombe
 - Candida albicans
 
-Cartelle principali:
+Main folders:
 
 - [fasta_lievito](fasta_lievito)
 - [string_lievito](string_lievito)
@@ -143,21 +143,21 @@ Cartelle principali:
 - [grafici](grafici)
 - [appunti](appunti)
 
-## Valutazione e grafici
-La valutazione confronta baseline e modello custom con metriche:
+## Evaluation and charts
+Evaluation compares baseline and custom model with metrics:
 
 - AUPR
 - AUROC
 - Precision
 - Recall
-- tempo di inferenza/testing
+- inference/testing time
 
-Script di supporto ai grafici:
+Chart support script:
 
 - [grafici/compare_custom_vs_dscript.py](grafici/compare_custom_vs_dscript.py)
 
-## Requisiti software
-Dipendenze usate nel notebook (Kaggle/Colab-like):
+## Software requirements
+Dependencies used in the notebook (Kaggle/Colab-like):
 
 - torch
 - transformers
@@ -169,19 +169,19 @@ Dipendenze usate nel notebook (Kaggle/Colab-like):
 - scikit-learn
 - dscript
 
-## Come leggere il repository
-Percorso consigliato:
+## How to read the repository
+Recommended path:
 
-1. apri il notebook principale [appunti/esm2-v2 (4).ipynb](appunti/esm2-v2%20(4).ipynb)
-2. leggi la pipeline ETL nei moduli di preprocessing in [string_lievito](string_lievito), [uniprot_lievito](uniprot_lievito), [fasta_lievito](fasta_lievito)
-3. verifica i dataset finali [dscript_train.csv](dscript_train.csv) e [dscript_test.csv](dscript_test.csv)
-4. consulta i grafici finali in [grafici](grafici)
+1. open the main notebook [appunti/esm2-v2 (4).ipynb](appunti/esm2-v2%20(4).ipynb)
+2. read the ETL pipeline in the preprocessing modules in [string_lievito](string_lievito), [uniprot_lievito](uniprot_lievito), [fasta_lievito](fasta_lievito)
+3. check the final datasets [dscript_train.csv](dscript_train.csv) and [dscript_test.csv](dscript_test.csv)
+4. inspect the final charts in [grafici](grafici)
 
-## Nota finale
-Questo progetto implementa una pipeline end-to-end per PPI prediction che integra:
+## Final note
+This project implements an end-to-end pipeline for PPI prediction that integrates:
 
-- conoscenza biologica (localizzazione cellulare)
-- rappresentazioni proteiche da language model (ESM-2)
-- modulo neurale custom con cross-attention bidirezionale
+- biological knowledge (cellular localization)
+- protein representations from a language model (ESM-2)
+- custom neural module with bidirectional cross-attention
 
-con validazione comparativa multi-organismo contro baseline D-SCRIPT.
+with multi-organism comparative validation against the D-SCRIPT baseline.
